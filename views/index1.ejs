@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Semester Schedule</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #2c3e50, #4a6491);
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+        
+        .semester-nav {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        
+        .semester-btn {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            border: none;
+            padding: 20px 15px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .semester-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(135deg, #2980b9, #1a252f);
+        }
+        
+        .semester-btn.active {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            transform: scale(1.05);
+        }
+        
+        .schedule-container {
+            padding: 30px;
+            display: none;
+        }
+        
+        .schedule-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .semester-title {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #2c3e50;
+            font-size: 2.2rem;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .schedule-table th {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 18px 15px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .schedule-table td {
+            padding: 16px 12px;
+            text-align: center;
+            border-bottom: 1px solid #e1e8f0;
+            transition: background 0.3s;
+        }
+        
+        .schedule-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .schedule-table tr:hover td {
+            background: #e3f2fd;
+        }
+        
+        .time-slot {
+            background: #2c3e50;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .break-cell {
+            background: #ffeaa7;
+            font-weight: 600;
+            color: #d35400;
+        }
+        
+        .lab {
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-weight: 600;
+        }
+        
+        .tutorial {
+            background: #f3e5f5;
+            color: #7b1fa2;
+            font-weight: 600;
+        }
+        
+        .lunch {
+            background: #ffebee;
+            color: #c62828;
+            font-weight: 600;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+            border-top: 1px solid #ecf0f1;
+            background: #f8f9fa;
+        }
+        
+        @media (max-width: 768px) {
+            .semester-nav {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .schedule-table {
+                font-size: 0.9rem;
+            }
+            
+            .schedule-table th, 
+            .schedule-table td {
+                padding: 12px 8px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .semester-nav {
+                grid-template-columns: 1fr;
+            }
+            
+            .schedule-table {
+                font-size: 0.8rem;
+            }
+            
+            .schedule-table th, 
+            .schedule-table td {
+                padding: 10px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>University Semester Schedule</h1>
+            <p class="subtitle">Click on any semester to view its weekly schedule</p>
+        </header>
+        
+        <div class="semester-nav">
+            <button class="semester-btn active" data-semester="1">Semester 1</button>
+            <button class="semester-btn" data-semester="2">Semester 2</button>
+            <button class="semester-btn" data-semester="3">Semester 3</button>
+            <button class="semester-btn" data-semester="4">Semester 4</button>
+            <button class="semester-btn" data-semester="5">Semester 5</button>
+            <button class="semester-btn" data-semester="6">Semester 6</button>
+            <button class="semester-btn" data-semester="7">Semester 7</button>
+            <button class="semester-btn" data-semester="8">Semester 8</button>
+        </div>
+        
+        <!-- Semester 1 Schedule -->
+        <div class="schedule-container active" id="semester-1">
+            <h2 class="semester-title">Semester 1 Schedule</h2>
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="time-slot">9:45-10:45</td>
+                        <td>Mathematics-I</td>
+                        <td>Physics</td>
+                        <td>Chemistry</td>
+                        <td>Programming in C</td>
+                        <td>English</td>
+                        <td>Mathematics-I</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">10:45-11:45</td>
+                        <td>Engineering Drawing</td>
+                        <td>Mathematics-I</td>
+                        <td>Physics</td>
+                        <td>Chemistry</td>
+                        <td>Programming in C</td>
+                        <td>Physics</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">11:45-12:45</td>
+                        <td colspan="7" class="lunch">LUNCH BREAK</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">12:45-1:45</td>
+                        <td class="lab">Physics Lab</td>
+                        <td class="lab">Chemistry Lab</td>
+                        <td class="lab">Programming Lab</td>
+                        <td>Workshop</td>
+                        <td class="lab">English Lab</td>
+                        <td class="lab">Workshop</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">1:45-2:45</td>
+                        <td>Chemistry</td>
+                        <td>Programming in C</td>
+                        <td>English</td>
+                        <td>Mathematics-I</td>
+                        <td>Physics</td>
+                        <td>Chemistry</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">2:45-3:45</td>
+                        <td>Workshop</td>
+                        <td class="lab">Physics Lab</td>
+                        <td class="lab">Chemistry Lab</td>
+                        <td class="lab">Programming Lab</td>
+                        <td>Mathematics-I</td>
+                        <td>Programming in C</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">3:45-4:25</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Semester 2 Schedule -->
+        <div class="schedule-container" id="semester-2">
+            <h2 class="semester-title">Semester 2 Schedule</h2>
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="time-slot">9:45-10:45</td>
+                        <td>Mathematics-II</td>
+                        <td>Basic Electronics</td>
+                        <td>Environmental Science</td>
+                        <td>Data Structures</td>
+                        <td>Digital Logic</td>
+                        <td>Mathematics-II</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">10:45-11:45</td>
+                        <td>Object Oriented Programming</td>
+                        <td>Mathematics-II</td>
+                        <td>Basic Electronics</td>
+                        <td>Environmental Science</td>
+                        <td>Data Structures</td>
+                        <td>Basic Electronics</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">11:45-12:45</td>
+                        <td colspan="7" class="lunch">LUNCH BREAK</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">12:45-1:45</td>
+                        <td class="lab">Data Structures Lab</td>
+                        <td class="lab">OOP Lab</td>
+                        <td class="lab">Electronics Lab</td>
+                        <td class="lab">Digital Logic Lab</td>
+                        <td>Mathematics-II</td>
+                        <td class="lab">OOP Lab</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">1:45-2:45</td>
+                        <td>Digital Logic</td>
+                        <td>Data Structures</td>
+                        <td>Object Oriented Programming</td>
+                        <td>Mathematics-II</td>
+                        <td>Basic Electronics</td>
+                        <td>Data Structures</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">2:45-3:45</td>
+                        <td class="lab">OOP Lab</td>
+                        <td class="lab">Data Structures Lab</td>
+                        <td class="lab">Digital Logic Lab</td>
+                        <td class="lab">Electronics Lab</td>
+                        <td>Environmental Science</td>
+                        <td>Digital Logic</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">3:45-4:25</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Semester 3 Schedule -->
+        <div class="schedule-container" id="semester-3">
+            <h2 class="semester-title">Semester 3 Schedule</h2>
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="time-slot">9:45-10:45</td>
+                        <td>Discrete Mathematics</td>
+                        <td>Computer Organization</td>
+                        <td>Database Systems</td>
+                        <td>Operating Systems</td>
+                        <td>Python Programming</td>
+                        <td>Discrete Mathematics</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">10:45-11:45</td>
+                        <td>Theory of Computation</td>
+                        <td>Discrete Mathematics</td>
+                        <td>Computer Organization</td>
+                        <td>Database Systems</td>
+                        <td>Operating Systems</td>
+                        <td>Computer Organization</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">11:45-12:45</td>
+                        <td colspan="7" class="lunch">LUNCH BREAK</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">12:45-1:45</td>
+                        <td class="lab">Python Lab</td>
+                        <td class="lab">DBMS Lab</td>
+                        <td class="lab">OS Lab</td>
+                        <td class="lab">Computer Org Lab</td>
+                        <td>Theory of Computation</td>
+                        <td class="lab">DBMS Lab</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">1:45-2:45</td>
+                        <td>Operating Systems</td>
+                        <td>Python Programming</td>
+                        <td>Theory of Computation</td>
+                        <td>Discrete Mathematics</td>
+                        <td>Computer Organization</td>
+                        <td>Operating Systems</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">2:45-3:45</td>
+                        <td class="lab">DBMS Lab</td>
+                        <td class="lab">OS Lab</td>
+                        <td class="lab">Python Lab</td>
+                        <td>Theory of Computation</td>
+                        <td>Database Systems</td>
+                        <td class="lab">Python Lab</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">3:45-4:25</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Semester 4 Schedule -->
+        <div class="schedule-container" id="semester-4">
+            <h2 class="semester-title">Semester 4 Schedule</h2>
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="time-slot">9:45-10:45</td>
+                        <td>Algorithms</td>
+                        <td>Computer Networks</td>
+                        <td>Software Engineering</td>
+                        <td>Linux Programming</td>
+                        <td>Web Technologies</td>
+                        <td>Algorithms</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">10:45-11:45</td>
+                        <td>Java Programming</td>
+                        <td>Algorithms</td>
+                        <td>Computer Networks</td>
+                        <td>Software Engineering</td>
+                        <td>Linux Programming</td>
+                        <td>Computer Networks</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">11:45-12:45</td>
+                        <td colspan="7" class="lunch">LUNCH BREAK</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">12:45-1:45</td>
+                        <td class="lab">Java Lab</td>
+                        <td class="lab">Networks Lab</td>
+                        <td class="lab">Web Technologies Lab</td>
+                        <td class="lab">Linux Lab</td>
+                        <td class="lab">Algorithms Lab</td>
+                        <td class="lab">Java Lab</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">1:45-2:45</td>
+                        <td>Linux Programming</td>
+                        <td>Web Technologies</td>
+                        <td>Java Programming</td>
+                        <td>Algorithms</td>
+                        <td>Computer Networks</td>
+                        <td>Linux Programming</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">2:45-3:45</td>
+                        <td class="lab">Algorithms Lab</td>
+                        <td class="lab">Java Lab</td>
+                        <td class="lab">Linux Lab</td>
+                        <td class="lab">Networks Lab</td>
+                        <td>Software Engineering</td>
+                        <td class="lab">Networks Lab</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">3:45-4:25</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Semester 5 Schedule -->
+        <div class="schedule-container" id="semester-5">
+            <h2 class="semester-title">Semester 5 Schedule</h2>
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="time-slot">9:45-10:45</td>
+                        <td>Machine Learning</td>
+                        <td>Cybersecurity</td>
+                        <td>Data Mining</td>
+                        <td>Cloud Computing</td>
+                        <td>Mobile Computing</td>
+                        <td>Machine Learning</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">10:45-11:45</td>
+                        <td>Internet of Things</td>
+                        <td>Machine Learning</td>
+                        <td>Cybersecurity</td>
+                        <td>Data Mining</td>
+                        <td>Cloud Computing</td>
+                        <td>Cybersecurity</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">11:45-12:45</td>
+                        <td colspan="7" class="lunch">LUNCH BREAK</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">12:45-1:45</td>
+                        <td class="lab">ML Lab</td>
+                        <td class="lab">Cybersecurity Lab</td>
+                        <td class="lab">IoT Lab</td>
+                        <td class="lab">Cloud Computing Lab</td>
+                        <td class="lab">Data Mining Lab</td>
+                        <td class="lab">ML Lab</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">1:45-2:45</td>
+                        <td>Cloud Computing</td>
+                        <td>Mobile Computing</td>
+                        <td>Internet of Things</td>
+                        <td>Machine Learning</td>
+                        <td>Cybersecurity</td>
+                        <td>Cloud Computing</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">2:45-3:45</td>
+                        <td class="lab">Mobile App Dev Lab</td>
+                        <td class="lab">ML Lab</td>
+                        <td class="lab">Cybersecurity Lab</td>
+                        <td class="lab">IoT Lab</td>
+                        <td>Data Mining</td>
+                        <td class="lab">Mobile App Dev Lab</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">3:45-4:25</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Semester 6 Schedule -->
+        <div class="schedule-container" id="semester-6">
+            <h2 class="semester-title">Semester 6 Schedule</h2>
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="time-slot">9:45-10:45</td>
+                        <td>Artificial Intelligence</td>
+                        <td>Big Data Analytics</td>
+                        <td>Blockchain Technology</td>
+                        <td>Network Security</td>
+                        <td>Software Testing</td>
+                        <td>Artificial Intelligence</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">10:45-11:45</td>
+                        <td>Deep Learning</td>
+                        <td>Artificial Intelligence</td>
+                        <td>Big Data Analytics</td>
+                        <td>Blockchain Technology</td>
+                        <td>Network Security</td>
+                        <td>Big Data Analytics</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">11:45-12:45</td>
+                        <td colspan="7" class="lunch">LUNCH BREAK</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">12:45-1:45</td>
+                        <td class="lab">AI Lab</td>
+                        <td class="lab">Big Data Lab</td>
+                        <td class="lab">Deep Learning Lab</td>
+                        <td class="lab">Blockchain Lab</td>
+                        <td class="lab">Network Security Lab</td>
+                        <td class="lab">AI Lab</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">1:45-2:45</td>
+                        <td>Network Security</td>
+                        <td>Software Testing</td>
+                        <td>Deep Learning</td>
+                        <td>Artificial Intelligence</td>
+                        <td>Big Data Analytics</td>
+                        <td>Network Security</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">2:45-3:45</td>
+                        <td class="lab">Software Testing Lab</td>
+                        <td class="lab">AI Lab</td>
+                        <td class="lab">Big Data Lab</td>
+                        <td class="lab">Deep Learning Lab</td>
+                        <td>Blockchain Technology</td>
+                        <td class="lab">Software Testing Lab</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">3:45-4:25</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Semester 7 Schedule -->
+        <div class="schedule-container" id="semester-7">
+            <h2 class="semester-title">Semester 7 Schedule</h2>
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="time-slot">9:45-10:45</td>
+                        <td>Project Work</td>
+                        <td>Ethical Hacking</td>
+                        <td>Quantum Computing</td>
+                        <td>DevOps</td>
+                        <td>Natural Language Processing</td>
+                        <td>Project Work</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">10:45-11:45</td>
+                        <td>Computer Vision</td>
+                        <td>Project Work</td>
+                        <td>Ethical Hacking</td>
+                        <td>Quantum Computing</td>
+                        <td>DevOps</td>
+                        <td>Ethical Hacking</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">11:45-12:45</td>
+                        <td colspan="7" class="lunch">LUNCH BREAK</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">12:45-1:45</td>
+                        <td class="lab">Project Lab</td>
+                        <td class="lab">Ethical Hacking Lab</td>
+                        <td class="lab">Computer Vision Lab</td>
+                        <td class="lab">DevOps Lab</td>
+                        <td class="lab">NLP Lab</td>
+                        <td class="lab">Project Lab</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">1:45-2:45</td>
+                        <td>DevOps</td>
+                        <td>Natural Language Processing</td>
+                        <td>Computer Vision</td>
+                        <td>Project Work</td>
+                        <td>Ethical Hacking</td>
+                        <td>DevOps</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">2:45-3:45</td>
+                        <td class="lab">Quantum Computing Lab</td>
+                        <td class="lab">Project Lab</td>
+                        <td class="lab">Ethical Hacking Lab</td>
+                        <td class="lab">Computer Vision Lab</td>
+                        <td>Quantum Computing</td>
+                        <td class="lab">Quantum Computing Lab</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">3:45-4:25</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Semester 8 Schedule -->
+        <div class="schedule-container" id="semester-8">
+            <h2 class="semester-title">Semester 8 Schedule</h2>
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="time-slot">9:45-10:45</td>
+                        <td>Major Project</td>
+                        <td>Entrepreneurship</td>
+                        <td>Research Methodology</td>
+                        <td>Industry 4.0</td>
+                        <td>Professional Ethics</td>
+                        <td>Major Project</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">10:45-11:45</td>
+                        <td>Advanced Algorithms</td>
+                        <td>Major Project</td>
+                        <td>Entrepreneurship</td>
+                        <td>Research Methodology</td>
+                        <td>Industry 4.0</td>
+                        <td>Entrepreneurship</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">11:45-12:45</td>
+                        <td colspan="7" class="lunch">LUNCH BREAK</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">12:45-1:45</td>
+                        <td>Project Work</td>
+                        <td class="lab">Research Lab</td>
+                        <td class="lab">Advanced Algorithms Lab</td>
+                        <td class="lab">Industry 4.0 Lab</td>
+                        <td>Project Work</td>
+                        <td>Project Work</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">1:45-2:45</td>
+                        <td>Industry 4.0</td>
+                        <td>Professional Ethics</td>
+                        <td>Advanced Algorithms</td>
+                        <td>Major Project</td>
+                        <td>Entrepreneurship</td>
+                        <td>Industry 4.0</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">2:45-3:45</td>
+                        <td>Project Work</td>
+                        <td>Project Work</td>
+                        <td class="lab">Research Lab</td>
+                        <td class="lab">Advanced Algorithms Lab</td>
+                        <td>Research Methodology</td>
+                        <td>Project Work</td>
+                    </tr>
+                    <tr>
+                        <td class="time-slot">3:45-4:25</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                        <td class="tutorial">Tutorial</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <footer>
+            <p>University Academic Schedule System &copy; 2023</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const semesterButtons = document.querySelectorAll('.semester-btn');
+            const scheduleContainers = document.querySelectorAll('.schedule-container');
+            
+            semesterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const semesterId = this.getAttribute('data-semester');
+                    
+                    // Remove active class from all buttons and containers
+                    semesterButtons.forEach(btn => btn.classList.remove('active'));
+                    scheduleContainers.forEach(container => container.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding container
+                    this.classList.add('active');
+                    document.getElementById(`semester-${semesterId}`).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
